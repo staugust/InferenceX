@@ -22,6 +22,8 @@
 #                            is divided by the emitted GPU count).
 #
 # Strongly recommended optional inputs:
+#   AIPERF_RUNTIME_DIR       Base dir for the uv-built AIPerf venv/uv/cache.
+#                            Defaults to /home/local/workspace/kvpool/aiperf.
 #   AIPERF_SERVER_URL        http(s)://<host>:<port> engine endpoint. Required
 #                            for this helper; PORT is derived from it.
 #   AIPERF_SERVER_METRICS_URLS
@@ -54,6 +56,15 @@
 set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Pin the uv-built AIPerf runtime (venv, uv binary, and uv download cache) to a
+# stable dev-pod directory instead of the per-PID /tmp default, so the cache
+# survives across runs and /tmp cleanup. Installers still rebuild venv from the
+# warm cache each run. Override with AIPERF_RUNTIME_DIR if needed.
+if [[ -z "${AIPERF_RUNTIME_DIR:-}" ]]; then
+    export AIPERF_RUNTIME_DIR="/home/local/workspace/kvpool/aiperf"
+fi
+mkdir -p "$AIPERF_RUNTIME_DIR"
 
 source "$SCRIPT_DIR/benchmarks/benchmark_lib.sh" --validation-only
 
