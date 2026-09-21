@@ -24,6 +24,8 @@
 # Strongly recommended optional inputs:
 #   AIPERF_RUNTIME_DIR       Base dir for the uv-built AIPerf venv/uv/cache.
 #                            Defaults to /home/local/workspace/kvpool/aiperf.
+#                            A healthy venv there is reused across runs; force
+#                            a rebuild with `rm -rf "$AIPERF_RUNTIME_DIR/venv"`.
 #   AIPERF_SERVER_URL        http(s)://<host>:<port> engine endpoint. Required
 #                            for this helper; PORT is derived from it.
 #   AIPERF_SERVER_METRICS_URLS
@@ -65,6 +67,20 @@ if [[ -z "${AIPERF_RUNTIME_DIR:-}" ]]; then
     export AIPERF_RUNTIME_DIR="/home/local/workspace/kvpool/aiperf"
 fi
 mkdir -p "$AIPERF_RUNTIME_DIR"
+
+# Reuse a healthy, previously built venv instead of rebuilding it on every
+# invocation (install_agentic_deps normally removes $AIPERF_VENV first).
+# aiperf is installed editable, so source-tree updates stay live. Force a
+# rebuild after dependency/spec changes with:
+#   rm -rf "$AIPERF_RUNTIME_DIR/venv"
+AIPERF_VENV_CANDIDATE="${AIPERF_RUNTIME_DIR}/venv"
+if [[ -z "${AIPERF_DEPS_READY:-}" ]]; then
+    if [[ -x "${AIPERF_VENV_CANDIDATE}/bin/python" ]] \
+        && "${AIPERF_VENV_CANDIDATE}/bin/python" -c "import aiperf" >/dev/null 2>&1; then
+        export AIPERF_DEPS_READY=1
+        echo "Reusing existing AIPerf venv: ${AIPERF_VENV_CANDIDATE}"
+    fi
+fi
 
 source "$SCRIPT_DIR/benchmarks/benchmark_lib.sh" --validation-only
 
