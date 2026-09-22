@@ -3083,7 +3083,7 @@ AIPERF_UV_CACHE_DIR="${AIPERF_RUNTIME_DIR}/uv-cache"
 AIPERF_PYTHON="${AIPERF_VENV}/bin/python"
 AIPERF_CLI="${AIPERF_VENV}/bin/aiperf"
 AIPERF_HF_CLI="${AIPERF_VENV}/bin/hf"
-AIPERF_DEPS_READY=0
+AIPERF_DEPS_READY=${AIPERF_DEPS_READY:-0}
 
 agentic_pip_install() {
     local pip_install=(python3 -m pip install)
